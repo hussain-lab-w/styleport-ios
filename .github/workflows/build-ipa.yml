@@ -53,6 +53,12 @@ jobs:
           mkdir -p build/Payload
           cp -R build/StylePort.xcarchive/Products/Applications/StylePort.app build/Payload/
           (cd build && zip -qry StylePort.ipa Payload)
+      
+      - name: Verify app contents
+        run: |
+          echo "---- app contents ----"
+          find build/Payload/StylePort.app | head -60
+          test -f build/Payload/StylePort.app/Web/index.html && echo "WEB OK" || (echo "WEB MISSING" && exit 1)
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
