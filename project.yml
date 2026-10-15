@@ -16,6 +16,7 @@ targets:
           - Resources/Web/**
     resources:
       - path: StylePort/Resources/Web
+        type: folder
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.styleport.photographicstyles
