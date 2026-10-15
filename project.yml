@@ -1,0 +1,28 @@
+name: StylePort
+options:
+  deploymentTarget:
+    iOS: "15.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+targets:
+  StylePort:
+    type: application
+    platform: iOS
+    sources:
+      - path: StylePort
+        excludes:
+          - Resources/Web/**
+    resources:
+      - path: StylePort/Resources/Web
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.styleport.photographicstyles
+        PRODUCT_NAME: StylePort
+        INFOPLIST_FILE: StylePort/Info.plist
+        TARGETED_DEVICE_FAMILY: "1"
+        IPHONEOS_DEPLOYMENT_TARGET: "15.0"
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGNING_ALLOWED: "NO"
+        CODE_SIGNING_REQUIRED: "NO"
