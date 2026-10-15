@@ -14,9 +14,9 @@ targets:
       - path: StylePort
         excludes:
           - Resources/Web/**
-    resources:
       - path: StylePort/Resources/Web
         type: folder
+        buildPhase: resources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.styleport.photographicstyles
