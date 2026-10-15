@@ -4,8 +4,12 @@
 <dict>
     <key>CFBundleDisplayName</key>
     <string>StylePort</string>
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
-    <string>com.styleport.photographicstyles</string>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
     <key>CFBundleName</key>
     <string>StylePort</string>
     <key>CFBundlePackageType</key>
@@ -17,10 +21,7 @@
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>UILaunchScreen</key>
-    <dict>
-        <key>UIColorName</key>
-        <string>LaunchBackground</string>
-    </dict>
+    <dict/>
     <key>UIRequiredDeviceCapabilities</key>
     <array>
         <string>arm64</string>
