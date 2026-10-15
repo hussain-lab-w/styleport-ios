@@ -13,6 +13,49 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Bundle libheif locally (offline)
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          npm pack libheif-js@1.18.2 --silent
+          tar xzf libheif-js-1.18.2.tgz
+          cp package/libheif/libheif.js "$GITHUB_WORKSPACE/StylePort/Resources/Web/src/libheif.js"
+          ls -la "$GITHUB_WORKSPACE/StylePort/Resources/Web/src/libheif.js"
+
+      - name: Generate app icon
+        run: |
+          set -euo pipefail
+          SRC=StylePort/Resources/Web/icons/icon-512.png
+          SET=StylePort/Assets.xcassets/AppIcon.appiconset
+          mkdir -p "$SET"
+          echo '{"info":{"version":1,"author":"xcode"}}' > StylePort/Assets.xcassets/Contents.json
+          gen() { sips -z "$2" "$2" "$SRC" --out "$SET/$1" >/dev/null; }
+          gen icon-40.png 40
+          gen icon-60.png 60
+          gen icon-58.png 58
+          gen icon-87.png 87
+          gen icon-80.png 80
+          gen icon-120.png 120
+          gen icon-180.png 180
+          gen icon-1024.png 1024
+          cat > "$SET/Contents.json" <<'JSON'
+          {
+            "images": [
+              {"size":"20x20","idiom":"iphone","filename":"icon-40.png","scale":"2x"},
+              {"size":"20x20","idiom":"iphone","filename":"icon-60.png","scale":"3x"},
+              {"size":"29x29","idiom":"iphone","filename":"icon-58.png","scale":"2x"},
+              {"size":"29x29","idiom":"iphone","filename":"icon-87.png","scale":"3x"},
+              {"size":"40x40","idiom":"iphone","filename":"icon-80.png","scale":"2x"},
+              {"size":"40x40","idiom":"iphone","filename":"icon-120.png","scale":"3x"},
+              {"size":"60x60","idiom":"iphone","filename":"icon-120.png","scale":"2x"},
+              {"size":"60x60","idiom":"iphone","filename":"icon-180.png","scale":"3x"},
+              {"size":"1024x1024","idiom":"ios-marketing","filename":"icon-1024.png","scale":"1x"}
+            ],
+            "info": {"version":1,"author":"xcode"}
+          }
+          JSON
+          python3 -c "import json;json.load(open('$SET/Contents.json'))"
+
       - name: Select latest Xcode
         run: |
           sudo xcode-select -s "$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)"
@@ -53,12 +96,13 @@ jobs:
           mkdir -p build/Payload
           cp -R build/StylePort.xcarchive/Products/Applications/StylePort.app build/Payload/
           (cd build && zip -qry StylePort.ipa Payload)
-      
+
       - name: Verify app contents
         run: |
-          echo "---- app contents ----"
-          find build/Payload/StylePort.app | head -60
-          test -f build/Payload/StylePort.app/Web/index.html && echo "WEB OK" || (echo "WEB MISSING" && exit 1)
+          find build/Payload/StylePort.app | head -40
+          test -f build/Payload/StylePort.app/Web/index.html
+          test -f build/Payload/StylePort.app/Web/src/libheif.js
+          test -f build/Payload/StylePort.app/Assets.car
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
