@@ -7,7 +7,8 @@
 
 import { discoverHeic, extractItem } from "./heif.js";
 
-const LIBHEIF_URL = "https://cdn.jsdelivr.net/npm/libheif-js@1.18.2/libheif/libheif.js";
+const LIBHEIF_URL = new URL("./libheif.js", import.meta.url).href;
+
 
 let libheifPromise = null;
 
