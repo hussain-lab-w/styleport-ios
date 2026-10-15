@@ -12,24 +12,66 @@ struct StylePortApp: App {
     }
 }
 
+final class BundleSchemeHandler: NSObject, WKURLSchemeHandler {
+    private func webRoot() -> URL? {
+        if let u = Bundle.main.url(forResource: "Web", withExtension: nil) { return u }
+        let candidates = [Bundle.main.bundleURL.appendingPathComponent("Web")]
+        return candidates.first { FileManager.default.fileExists(atPath: $0.path) }
+    }
+
+    private func mime(_ ext: String) -> String {
+        switch ext.lowercased() {
+        case "html": return "text/html; charset=utf-8"
+        case "js", "mjs": return "text/javascript; charset=utf-8"
+        case "css": return "text/css; charset=utf-8"
+        case "json", "webmanifest": return "application/json; charset=utf-8"
+        case "png": return "image/png"
+        case "zip": return "application/zip"
+        case "wasm": return "application/wasm"
+        default: return "application/octet-stream"
+        }
+    }
+
+    func webView(_ webView: WKWebView, start task: WKURLSchemeTask) {
+        guard let url = task.request.url, let root = webRoot() else {
+            task.didFailWithError(URLError(.fileDoesNotExist)); return
+        }
+        var path = url.path
+        if path.isEmpty || path == "/" { path = "/index.html" }
+        let file = root.appendingPathComponent(String(path.dropFirst()))
+        guard let data = try? Data(contentsOf: file) else {
+            task.didFailWithError(URLError(.fileDoesNotExist)); return
+        }
+        let headers = [
+            "Content-Type": mime(file.pathExtension),
+            "Content-Length": "\(data.count)",
+            "Access-Control-Allow-Origin": "*"
+        ]
+        let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: headers)!
+        task.didReceive(response)
+        task.didReceive(data)
+        task.didFinish()
+    }
+
+    func webView(_ webView: WKWebView, stop task: WKURLSchemeTask) {}
+}
+
 struct StylePortWebView: UIViewRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeUIView(context: Context) -> WKWebView {
         let configuration = WKWebViewConfiguration()
         configuration.defaultWebpagePreferences.allowsContentJavaScript = true
+        configuration.setURLSchemeHandler(BundleSchemeHandler(), forURLScheme: "app")
         configuration.userContentController.add(context.coordinator, name: "saveHeic")
 
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.backgroundColor = UIColor(red: 0.957, green: 0.945, blue: 0.91, alpha: 1)
         webView.scrollView.contentInsetAdjustmentBehavior = .never
+        if #available(iOS 16.4, *) { webView.isInspectable = true }
         context.coordinator.webView = webView
 
-        guard let webRoot = Bundle.main.url(forResource: "Web", withExtension: nil),
-              let index = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "Web") else {
-            return webView
-        }
-        webView.loadFileURL(index, allowingReadAccessTo: webRoot)
+        webView.load(URLRequest(url: URL(string: "app://local/index.html")!))
         return webView
     }
 
